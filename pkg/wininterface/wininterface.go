@@ -80,7 +80,7 @@ func Parse(list string) []Mac {
 				mac.NetworkAdapter = chunk["Network Adapter"]
 				mac.PhysicalAddress = chunk["Physical Address"]
 
-				tp := strings.ReplaceAll(chunk["Transport Name"], "Tcpip_", "NPF_")
+				tp := strings.ReplaceAll(chunk["Transport Name"], "Tcpip", "NPF")
 
 				mac.TransportName = tp
 
