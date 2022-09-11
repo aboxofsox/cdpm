@@ -2,11 +2,14 @@ package wininterface
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"os/exec"
 	"strings"
 	"text/tabwriter"
 )
 
+// Mac represents the output from getmac
 type Mac struct {
 	ConnectionName  string
 	NetworkAdapter  string
@@ -14,11 +17,24 @@ type Mac struct {
 	TransportName   string
 }
 
+// Because Windows
 const (
-	CR = "\r"
-	LF = "\n"
+	CR = "\r" // carriage return
+	LF = "\n" // line feed
 )
 
+// GetMac runs the getmac Windows command and returns its output.
+func GetMac() string {
+	cmd := exec.Command("getmac", "/FO", "list", "/V")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return string(output)
+}
+
+// chunkSlice splits a slice by "chunk" given a chunk size.
 func chunkSlice(slice []string, size int) [][]string {
 	var chunks [][]string
 
@@ -35,6 +51,7 @@ func chunkSlice(slice []string, size int) [][]string {
 	return chunks
 }
 
+// chunkMap splits a map by "chunk" given a chunk size
 func chunkMap(mp []map[string]string, size int) [][]map[string]string {
 	var chunks [][]map[string]string
 	for i := 0; i < len(mp); i += size {
@@ -49,10 +66,13 @@ func chunkMap(mp []map[string]string, size int) [][]map[string]string {
 	return chunks
 }
 
+// Parse takes the output of GetMac as a list and parses it for use, because Windows
 func Parse(list string) []Mac {
 	var amp []map[string]string
+
 	listSplit := strings.Split(list, CR+LF)
 	listChunks := chunkSlice(listSplit, 5)
+
 	for i := range listChunks {
 		mp := make(map[string]string)
 		for j := range listChunks[i] {
@@ -93,16 +113,31 @@ func Parse(list string) []Mac {
 	return macs
 
 }
+
+// Print pretty=prints the results []Mac
 func Print(macs []Mac) {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintf(tw, "Connection Name\tNetwork Adapter\tPhysical Address\tTransport Name\n")
-	for _, m := range macs {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", m.ConnectionName, m.NetworkAdapter, m.PhysicalAddress, m.TransportName)
+
+	_, err := fmt.Fprintf(tw, "Connection Name\tNetwork Adapter\tPhysical Address\tTransport Name\n")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	tw.Flush()
+	for _, m := range macs {
+		_, err := fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", m.ConnectionName, m.NetworkAdapter, m.PhysicalAddress, m.TransportName)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+
+	if err := tw.Flush(); err != nil {
+		log.Fatal(err)
+	}
 }
 
+// GetTransportByName filters []Mac by name.
 func GetTransportByName(name string, macs []Mac) string {
 	for _, m := range macs {
 		if m.ConnectionName == name {
