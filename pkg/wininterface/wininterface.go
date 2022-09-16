@@ -2,11 +2,8 @@ package wininterface
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
 	"strings"
-	"text/tabwriter"
 )
 
 // Mac represents the output from getmac
@@ -112,38 +109,4 @@ func Parse(list string) []Mac {
 
 	return macs
 
-}
-
-// Print pretty=prints the results []Mac
-func Print(macs []Mac) {
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-
-	_, err := fmt.Fprintf(tw, "Connection Name\tNetwork Adapter\tPhysical Address\tTransport Name\n")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for _, m := range macs {
-		_, err := fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", m.ConnectionName, m.NetworkAdapter, m.PhysicalAddress, m.TransportName)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
-
-	if err := tw.Flush(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// GetTransportByName filters []Mac by name.
-func GetTransportByName(name string, macs []Mac) string {
-	for _, m := range macs {
-		if m.ConnectionName == name {
-			return m.TransportName
-		}
-	}
-
-	return ""
 }
