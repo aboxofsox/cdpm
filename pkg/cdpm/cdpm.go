@@ -9,12 +9,20 @@ import (
 	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 )
 
+type Cdp struct {
+	NativeVlan byte   `json:"native-vlan"`
+	DeviceId   string `json:"device-id"`
+	PortId     string `json:"port-id"`
+	VoiceVlan  byte   `json:"voice-vlan"`
+}
+
 const (
-	Max      = 100              // maximum number of packets to get
+	Max      = 1                // maximum number of packets to get
 	Timeout  = time.Second * 10 // time before timeout (10 seconds)
 	PcapSize = 262144           // pcap size
 )
@@ -25,7 +33,20 @@ var (
 
 // Start starts listening for packets on a given interface
 func Start(device string) {
-	handle, err := pcap.OpenLive(device, PcapSize, true, Timeout)
+	open(device)
+}
+
+func open(device string) {
+	if device == "Media disconnected" {
+		fmt.Println("Media disconnected. Exiting.")
+		os.Exit(1)
+	}
+
+	var __cdp Cdp
+
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+
+	handle, err := pcap.OpenLive(device, PcapSize, true, pcap.ErrNotActive)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,44 +55,74 @@ func Start(device string) {
 		handle.Close()
 	}()
 
-	if err := handle.SetBPFFilter("port 443"); err != nil {
+	if err := handle.SetBPFFilter(""); err != nil {
 		log.Fatal(err)
 	}
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType()).Packets()
 
-	cdpProcessed := make([]*Cdp, Max)
+	// NOTE: it can take up 60 seconds or more to receive a CDP packet from a switch
 
-	bar := progressbar.Default(int64(Max))
+	var since time.Duration
+	var done bool
 
 	start := time.Now()
+
+	fmt.Println("Waiting for a CDP packet to arrive...")
 	for pkt := range packets {
-		if cdpLayer := pkt.Layer(layers.LayerTypeCiscoDiscovery); cdpLayer != nil {
-			cdp, _ := cdpLayer.(*layers.CiscoDiscoveryInfo)
-			if b := increment(bar); b {
+		if contains(pkt.Layers()) {
+			since = time.Since(start)
+
+			if cdpLayer := pkt.Layer(layers.LayerTypeCiscoDiscovery); cdpLayer != nil {
+				cdp, _ := cdpLayer.(*layers.CiscoDiscovery)
+				for _, v := range cdp.Values {
+					switch v.Type.String() {
+					case "Native VLAN":
+						__cdp.NativeVlan = v.Value[len(v.Value)-1]
+					case "VoIP VLAN Reply":
+						__cdp.VoiceVlan = v.Value[len(v.Value)-1]
+					case "Device ID":
+						__cdp.DeviceId = string(v.Value)
+					case "Port ID":
+						__cdp.PortId = string(v.Value)
+					}
+					since = time.Since(start)
+				}
 				break
 			}
-			cdpProcessed = append(cdpProcessed, CdpHandler(cdp))
-		} else {
-			since := time.Since(start)
-			if tmo := timeout(since); tmo {
-				fmt.Println(" no CDP packets were received")
-				os.Exit(1)
-			}
+		}
+		if done {
+			break
 		}
 	}
 
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+	fmt.Fprintf(tw, "Switch Name\tPort\tVLAN\tVoice VLAN\n")
+	fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n",
+		strings.Repeat("-", len("Switch Name")),
+		strings.Repeat("-", len("Port")),
+		strings.Repeat("-", len("VLAN")),
+		strings.Repeat("-", len("Voice VLAN")),
+	)
+	fmt.Fprintf(tw, "%s\t%s\t%v\t%v\n\n", __cdp.DeviceId, __cdp.PortId, __cdp.NativeVlan, __cdp.VoiceVlan)
+	fmt.Printf("took %.2f \n seconds", since.Seconds())
 
-	if _, err := fmt.Fprintf(tw, "Device ID\tVLAN\tPort ID\n"); err != nil {
-		fmt.Println(err)
-		return
-	}
+	tw.Flush()
 
-	for _, cdp := range cdpProcessed {
-		cdp.Print(tw)
-	}
+	return
+
 }
+
+func contains(layers []gopacket.Layer) bool {
+	for _, l := range layers {
+		if strings.Contains(l.LayerType().String(), "Cisco") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// DEAD:
 
 // increment adds 1 to bar, increments current, and returns true/false if/when current == Max
 func increment(bar *progressbar.ProgressBar) bool {
