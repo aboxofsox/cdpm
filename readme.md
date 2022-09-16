@@ -2,7 +2,6 @@
 
 <abbr title='Cisco Discovery Packet Monitor'>CDPM</abbr> is a simple tool to get CDP packet data from a Cisco switch. 
 
-While there are other tools out there for packet sniffing, CDPM is *just* for processing CDP packets on a Windows machine. Some moderate refactoring will be needed to bring this tool to Linux/MacOS.
 ### Usage:
 ```
 cdpm [command]
