@@ -22,3 +22,13 @@ Flags:
 Use "cdpm [command] --help" for more information about a command.
 ```
 
+
+### Example Usage
+Start CDPM and use the default interface, `Ethernet`.
+```
+cdpm start
+```
+Start CDPM and define an interface to listen to.
+```
+cdpm start -i Ethernet
+```
