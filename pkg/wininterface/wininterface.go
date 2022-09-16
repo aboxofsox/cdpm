@@ -102,7 +102,7 @@ func Parse(list string) []Mac {
 
 				tp := strings.ReplaceAll(chunk["Transport Name"], "Tcpip", "NPF")
 
-				mac.TransportName = tp
+				mac.TransportName = strings.ToLower(tp)
 
 				macs = append(macs, mac)
 			}

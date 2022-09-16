@@ -16,7 +16,7 @@ ForEach ($Platform in $Platforms) {
 
     If ($GOOS -eq 'windows') {
         $OutName += '.exe'
-        cmd.exe /c "go build -o $OutName $Package"
+        cmd.exe /c "go build -o $OutName ./bin/$Package"
     }
 }
 
