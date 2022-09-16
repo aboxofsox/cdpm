@@ -24,6 +24,9 @@ var start = &cobra.Command{
 		winint := wininterface.GetMac()
 		name := wininterface.Parse(winint)
 		for _, n := range name {
+			if netInterface == "" {
+				netInterface = "Ethernet"
+			}
 			if netInterface == n.ConnectionName {
 				cdpm.Start(n.TransportName)
 			}

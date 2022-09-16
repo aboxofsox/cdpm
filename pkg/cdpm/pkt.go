@@ -109,7 +109,7 @@ func printCdp(tw *tabwriter.Writer, cdp Cdp) {
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\t%s\t%s\n\t",
+		"%s\t%s\t%s\t%s\n",
 		strings.Repeat("-", len("Device Name")),
 		strings.Repeat("-", len("Port")),
 		strings.Repeat("-", len("VLAN")),
@@ -120,7 +120,7 @@ func printCdp(tw *tabwriter.Writer, cdp Cdp) {
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\t%v\t%v\n",
+		"%s\t%s\t%v\t%v\n\n",
 		cdp.DeviceId,
 		cdp.PortId,
 		cdp.NativeVlan,
