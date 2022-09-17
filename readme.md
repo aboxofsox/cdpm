@@ -2,6 +2,8 @@
 
 <abbr title='Cisco Discovery Packet Monitor'>CDPM</abbr> is a simple tool to get CDP packet data from a Cisco switch. 
 
+***[Npcap](https://npcap.com/#download) is required.***
+
 ### Usage:
 ```
 cdpm [command]
@@ -18,4 +20,15 @@ Flags:
 -t, --toggle             Help message for toggle
 
 Use "cdpm [command] --help" for more information about a command.
+```
+
+
+### Example Usage
+Start CDPM and use the default interface, `Ethernet`.
+```
+cdpm start
+```
+Start CDPM and define an interface to listen to.
+```
+cdpm start -i Ethernet
 ```
