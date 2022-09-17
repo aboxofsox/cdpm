@@ -11,31 +11,31 @@ import (
 	"time"
 )
 
-// Cdp holds the information we need from
+// CDP holds the information we need from
 // our CDP packet.
-type Cdp struct {
+type CDP struct {
 	NativeVlan byte   `json:"native-vlan"`
 	DeviceId   string `json:"device-id"`
 	PortId     string `json:"port-id"`
 	VoiceVlan  byte   `json:"voice-vlan"`
 }
 
-// Lldp holds the information we need from
+// LLDP holds the information we need from
 // the LLDP packet. LLDP is only sent if
 // a switchport is trunked.
-type Lldp struct {
+type LLDP struct {
 	PortDescription   string `json:"port-id"`
 	SystemName        string `json:"system-name"`
 	SystemDescription string `json:"system-description"`
 }
 
 // cdpHandler handles our CDP packet.
-// Returning the Cdp struct.
-func cdpHandler(layer gopacket.Layer) Cdp {
-	var cdp Cdp
-	cdpv, _ := layer.(*layers.CiscoDiscovery)
+// Returning the CDP struct.
+func cdpHandler(layer gopacket.Layer) CDP {
+	var cdp CDP
+	cdpl, _ := layer.(*layers.CiscoDiscovery)
 
-	for _, v := range cdpv.Values {
+	for _, v := range cdpl.Values {
 		switch v.Type.String() {
 		case "Native VLAN":
 			cdp.NativeVlan = v.Value[len(v.Value)-1]
@@ -52,15 +52,15 @@ func cdpHandler(layer gopacket.Layer) Cdp {
 }
 
 // lldpHandler handles the LLDP packet.
-// Returning the Lldp struct.
-func lldpHandler(layer gopacket.Layer) Lldp {
-	var lldp Lldp
+// Returning the LLDP struct.
+func lldpHandler(layer gopacket.Layer) LLDP {
+	var lldp LLDP
 
-	lldpv, _ := layer.(*layers.LinkLayerDiscoveryInfo)
+	lldpl, _ := layer.(*layers.LinkLayerDiscoveryInfo)
 
-	lldp.PortDescription = lldpv.PortDescription
-	lldp.SystemName = lldpv.SysName
-	lldp.SystemDescription = lldpv.SysDescription
+	lldp.PortDescription = lldpl.PortDescription
+	lldp.SystemName = lldpl.SysName
+	lldp.SystemDescription = lldpl.SysDescription
 
 	return lldp
 }
@@ -69,8 +69,8 @@ func lldpHandler(layer gopacket.Layer) Lldp {
 // in from gopacket.NewPacketSource.Packets().
 func pktHandler(packets chan gopacket.Packet) {
 	var (
-		cdp   Cdp
-		lldp  Lldp
+		cdp   CDP
+		lldp  LLDP
 		tw    = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		since time.Duration
 	)
@@ -97,8 +97,8 @@ func pktHandler(packets chan gopacket.Packet) {
 	}
 }
 
-// printCdp prints our Cdp struct to the terminal.
-func printCdp(tw *tabwriter.Writer, cdp Cdp) {
+// printCdp prints our CDP struct to the terminal.
+func printCdp(tw *tabwriter.Writer, cdp CDP) {
 	println()
 	if _, err := fmt.Fprintf(
 		tw,
@@ -134,8 +134,8 @@ func printCdp(tw *tabwriter.Writer, cdp Cdp) {
 	}
 }
 
-// printLldp prints the Lldp struct to the terminal.
-func printLldp(tw *tabwriter.Writer, lldp Lldp) {
+// printLldp prints the LLDP struct to the terminal.
+func printLldp(tw *tabwriter.Writer, lldp LLDP) {
 	println()
 	if _, err := fmt.Fprintf(
 		tw,

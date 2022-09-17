@@ -28,9 +28,7 @@ func Start(device string) {
 		log.Fatal(err)
 	}
 
-	defer func() {
-		handle.Close()
-	}()
+	defer func() { handle.Close() }()
 
 	if err := handle.SetBPFFilter(""); err != nil {
 		log.Fatal(err)
