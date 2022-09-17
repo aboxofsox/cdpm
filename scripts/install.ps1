@@ -9,6 +9,3 @@ $CurrentEnvPath = (Get-ItemProperty -Path $RegKey -Name PATH).path
 $NewEnvPath = "$CurrentEnvPath;$InstallDir"
 
 Set-ItemProperty -Path $RegKey -Name PATH -Value $NewEnvPath
-
-
-
