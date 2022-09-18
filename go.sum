@@ -1,3 +1,5 @@
+github.com/aboxofsox/wininterface v0.0.0-20220918190249-6a0687d7003f h1:ZXbwRDsGU1oMPXwBsBhcDr9hlWMtjLQ2VHfXvpnFTWA=
+github.com/aboxofsox/wininterface v0.0.0-20220918190249-6a0687d7003f/go.mod h1:oEyrdZ4Nk/z8348+JwkM5amKrLJeNI6IM8wZ8vUfMyY=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF8=
 github.com/google/gopacket v1.1.19/go.mod h1:iJ8V8n6KS+z2U1A8pUwu8bW5SyEMkXJB8Yo/Vo+TKTo=

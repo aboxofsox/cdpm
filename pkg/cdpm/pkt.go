@@ -54,15 +54,13 @@ func cdpHandler(layer gopacket.Layer) CDP {
 // lldpHandler handles the LLDP packet.
 // Returning the LLDP struct.
 func lldpHandler(layer gopacket.Layer) LLDP {
-	var lldp LLDP
-
 	lldpl, _ := layer.(*layers.LinkLayerDiscoveryInfo)
 
-	lldp.PortDescription = lldpl.PortDescription
-	lldp.SystemName = lldpl.SysName
-	lldp.SystemDescription = lldpl.SysDescription
-
-	return lldp
+	return LLDP{
+		PortDescription:   lldpl.PortDescription,
+		SystemName:        lldpl.SysName,
+		SystemDescription: lldpl.SysDescription,
+	}
 }
 
 // pktHandler handles all the packets coming
