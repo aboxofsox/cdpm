@@ -1,6 +1,7 @@
 package cdpm
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/gopacket"
 	_ "github.com/google/gopacket/layers"
@@ -16,10 +17,14 @@ const (
 	PcapSize = 262144           // pcap size
 )
 
+var (
+	ErrMediaDisconnected = errors.New("media disconnected")
+)
+
 // Start starts listening for packets on a given interface
 func Start(device string) {
 	if strings.ToLower(device) == "media disconnected" {
-		fmt.Println("Media disconnected. Exiting.")
+		fmt.Println(ErrMediaDisconnected)
 		os.Exit(1)
 	}
 

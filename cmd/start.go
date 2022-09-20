@@ -23,7 +23,6 @@ var start = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		win := wininterface.GetMac()
 		names := win.Parse()
-
 		for _, n := range names {
 			if netInterface == "" {
 				netInterface = "Ethernet"
