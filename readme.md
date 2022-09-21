@@ -24,15 +24,17 @@
 cdpm [command]
 
 Available Commands:
-completion  Generate the autocompletion script for the specified shell
-help        Help about any command
-start       start cdpm
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  start       start cdpm
 
 Flags:
--h, --help               help for cdpm
--i, --interface string   Defines the interface to listen to.
--o, --outfile string     Output results to file. (default "results.md")
--t, --toggle             Help message for toggle
+  -d, --duration int       How long to listen for packets. (default 30)
+  -h, --help               help for cdpm
+  -i, --interface string   Defines the interface to listen to.
+  -l, --log                Log received packets to file.
+  -o, --outfile string     Output results to file. (default "results.md")
+  -t, --toggle             Help message for toggle
 
 Use "cdpm [command] --help" for more information about a command.
 ```
@@ -40,6 +42,8 @@ Use "cdpm [command] --help" for more information about a command.
 
 ### Example Usage
 Start CDPM and use the default interface, `Ethernet`.
+
+*Note: depending on how the Cisco switch is configured, it could take some time to receive the first CDP packet.*
 ```
 cdpm start
 ```
@@ -47,5 +51,25 @@ Start CDPM and define an interface to listen to.
 ```
 cdpm start -i Ethernet
 ```
+Start CDPM and log packets received for 30 seconds and write their info to file.
+```ps1
+cdpm start -l -d 30
+```
+
+### Available Data
+While there's a lot more to a typical CDP or LLDP packet, the given purpose of this tool only needs the following:
+
+- The device name
+- Port
+- Native VLAN
+- Voice VLAN
+
+For trunked ports, the may send an LLDP packet, which isn't *quite* as useful as a CDP switch, given the scope fo this tool.
+
+- Port description
+- System name
+- System description
+
+Data expansion isn't planned, but I do plan on refactoring parts of this tool as separate packages; to be more modular. 
 
 
