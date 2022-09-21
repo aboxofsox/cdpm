@@ -25,22 +25,19 @@ var start = &cobra.Command{
 	Use:   "start",
 	Short: "start cdpm",
 	Run: func(cmd *cobra.Command, args []string) {
-		var tpName string
+		tpName := ""
 		win := wininterface.GetMac()
 		names := win.Parse()
 		for _, n := range names {
-			if netInterface == "" {
-				netInterface = "Ethernet"
-			}
 			if netInterface == n.ConnectionName {
 				tpName = n.TransportName
 			}
 
-			if log {
-				cdpm.Log(tpName, 0)
-			} else {
-				cdpm.Start(tpName)
-			}
+		}
+		if log {
+			cdpm.Log(tpName, 0)
+		} else {
+			cdpm.Start(tpName)
 		}
 	},
 }
