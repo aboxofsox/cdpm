@@ -64,7 +64,7 @@ While there's a lot more to a typical CDP or LLDP packet, the given purpose of t
 - Native VLAN
 - Voice VLAN
 
-For trunked ports, the may send an LLDP packet, which isn't *quite* as useful as a CDP switch, given the scope fo this tool.
+For trunked ports, the switch may send an LLDP packet, which isn't *quite* as useful as a CDP switch, given the scope of this tool.
 
 - Port description
 - System name
