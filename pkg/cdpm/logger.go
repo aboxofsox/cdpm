@@ -43,6 +43,11 @@ func Log(device string, duration int) {
 	start := time.Now()
 	end := start.Add(time.Second * time.Duration(duration))
 	for pkt := range packets {
+		if time.Now().UnixNano() >= end.UnixNano() {
+			fmt.Println("timeout reached")
+			return
+		}
+
 		if cdpLayer := pkt.Layer(layers.LayerTypeCiscoDiscovery); cdpLayer != nil {
 			cdpCount++
 			fmt.Printf("CDP: %d\n", cdpCount)
@@ -62,9 +67,6 @@ func Log(device string, duration int) {
 			return
 		}
 
-		if time.Now() == end {
-			return
-		}
 	}
 
 	handle.Close()
