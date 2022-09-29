@@ -78,13 +78,13 @@ func pktHandler(packets chan gopacket.Packet) {
 		if cdpLayer := pkt.Layer(layers.LayerTypeCiscoDiscovery); cdpLayer != nil {
 			fmt.Println("CDP Packet Received")
 			cdp = cdpHandler(cdpLayer)
-			printCdp(tw, cdp)
+			printCdp(tw, cdp, time.Now())
 			since = time.Since(start)
 			break
 		} else if lldpLayer := pkt.Layer(layers.LayerTypeLinkLayerDiscovery); lldpLayer != nil {
 			fmt.Println("LLDP Packet Received")
 			lldp = lldpHandler(lldpLayer)
-			printLldp(tw, lldp)
+			printLldp(tw, lldp, time.Now())
 			since = time.Since(start)
 			break
 		} else {
@@ -96,18 +96,19 @@ func pktHandler(packets chan gopacket.Packet) {
 }
 
 // printCdp prints our CDP struct to the terminal.
-func printCdp(tw *tabwriter.Writer, cdp CDP) {
+func printCdp(tw *tabwriter.Writer, cdp CDP, timestamp time.Time) {
 	println()
 	if _, err := fmt.Fprintf(
 		tw,
-		"Device Name\tPort\tVLAN\tVoice VLAN\n",
+		"Timestamp\tDevice Name\tPort\tVLAN\tVoice VLAN\n",
 	); err != nil {
 		log.Fatal(err)
 	}
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\t%s\t%s\n",
+		"%s\t%s\t%s\t%s\t%s\n",
+		strings.Repeat("-", len("Timestamp")),
 		strings.Repeat("-", len("Device Name")),
 		strings.Repeat("-", len("Port")),
 		strings.Repeat("-", len("VLAN")),
@@ -118,7 +119,8 @@ func printCdp(tw *tabwriter.Writer, cdp CDP) {
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\t%v\t%v\n\n",
+		"%s\t%s\t%s\t%v\t%v\n\n",
+		timestamp.Format(time.ANSIC),
 		cdp.DeviceId,
 		cdp.PortId,
 		cdp.NativeVlan,
@@ -133,7 +135,7 @@ func printCdp(tw *tabwriter.Writer, cdp CDP) {
 }
 
 // printLldp prints the LLDP struct to the terminal.
-func printLldp(tw *tabwriter.Writer, lldp LLDP) {
+func printLldp(tw *tabwriter.Writer, lldp LLDP, timestamp time.Time) {
 	println()
 	if _, err := fmt.Fprintf(
 		tw,
@@ -144,7 +146,8 @@ func printLldp(tw *tabwriter.Writer, lldp LLDP) {
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\n\n",
+		"%s\n%s\t%s\n\n",
+		timestamp.Format(time.ANSIC),
 		lldp.SystemName,
 		lldp.PortDescription,
 	); err != nil {
