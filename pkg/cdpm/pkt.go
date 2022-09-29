@@ -18,6 +18,7 @@ type CDP struct {
 	DeviceId   string `json:"device-id"`
 	PortId     string `json:"port-id"`
 	VoiceVlan  byte   `json:"voice-vlan"`
+	NetIP      string `json:"net-ip"`
 }
 
 // LLDP holds the information we need from
@@ -34,6 +35,16 @@ type LLDP struct {
 func cdpHandler(layer gopacket.Layer) CDP {
 	var cdp CDP
 	cdpl, _ := layer.(*layers.CiscoDiscovery)
+
+	cdplInfo, _ := layer.(*layers.CiscoDiscoveryInfo)
+
+	if cdplInfo != nil {
+		for _, addr := range cdplInfo.Addresses {
+			if addr != nil {
+				cdp.NetIP = addr.String()
+			}
+		}
+	}
 
 	for _, v := range cdpl.Values {
 		switch v.Type.String() {
@@ -67,10 +78,13 @@ func lldpHandler(layer gopacket.Layer) LLDP {
 // in from gopacket.NewPacketSource.Packets().
 func pktHandler(packets chan gopacket.Packet) {
 	var (
-		cdp   CDP
-		lldp  LLDP
-		tw    = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		since time.Duration
+		cdp          CDP
+		lldp         LLDP
+		tw           = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		since        time.Duration
+		cdpCount     = 0
+		lldpCount    = 0
+		cdpInfoCount = 0
 	)
 
 	start := time.Now()
@@ -78,21 +92,36 @@ func pktHandler(packets chan gopacket.Packet) {
 		if cdpLayer := pkt.Layer(layers.LayerTypeCiscoDiscovery); cdpLayer != nil {
 			fmt.Println("CDP Packet Received")
 			cdp = cdpHandler(cdpLayer)
-			printCdp(tw, cdp, time.Now())
 			since = time.Since(start)
-			break
-		} else if lldpLayer := pkt.Layer(layers.LayerTypeLinkLayerDiscovery); lldpLayer != nil {
+			cdpCount++
+		}
+		if lldpLayer := pkt.Layer(layers.LayerTypeLinkLayerDiscovery); lldpLayer != nil {
 			fmt.Println("LLDP Packet Received")
 			lldp = lldpHandler(lldpLayer)
 			printLldp(tw, lldp, time.Now())
 			since = time.Since(start)
-			break
-		} else {
-			if timeout(since) {
-				return
+			lldpCount++
+		}
+		if cdpInfoLayer := pkt.Layer(layers.LayerTypeCiscoDiscoveryInfo); cdpInfoLayer != nil {
+			fmt.Println("CDP Info Packet Received")
+			cdpInfo := cdpInfoLayer.(*layers.CiscoDiscoveryInfo)
+			if cdpInfo != nil {
+				for _, addr := range cdpInfo.Addresses {
+					if addr != nil {
+						cdp.NetIP = addr.String()
+					}
+				}
 			}
+			cdpInfoCount++
+		}
+
+		if (cdpCount == 1 && cdpInfoCount == 1) || lldpCount == 1 {
+			break
 		}
 	}
+	printCdp(tw, cdp, time.Now())
+	fmt.Println(since.Milliseconds())
+
 }
 
 // printCdp prints our CDP struct to the terminal.
@@ -100,16 +129,17 @@ func printCdp(tw *tabwriter.Writer, cdp CDP, timestamp time.Time) {
 	println()
 	if _, err := fmt.Fprintf(
 		tw,
-		"Timestamp\tDevice Name\tPort\tVLAN\tVoice VLAN\n",
+		"Timestamp\tDevice Name\tDevice IP\tPort\tVLAN\tVoice VLAN\n",
 	); err != nil {
 		log.Fatal(err)
 	}
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\t%s\t%s\t%s\n",
+		"%s\t%s\t%s\t%s\t%s\t%s\n",
 		strings.Repeat("-", len("Timestamp")),
 		strings.Repeat("-", len("Device Name")),
+		strings.Repeat("-", len("Device IP")),
 		strings.Repeat("-", len("Port")),
 		strings.Repeat("-", len("VLAN")),
 		strings.Repeat("-", len("Voice VLAN")),
@@ -119,9 +149,10 @@ func printCdp(tw *tabwriter.Writer, cdp CDP, timestamp time.Time) {
 
 	if _, err := fmt.Fprintf(
 		tw,
-		"%s\t%s\t%s\t%v\t%v\n\n",
+		"%s\t%s\t%s\t%s\t%v\t%v\n\n",
 		timestamp.Format(time.ANSIC),
 		cdp.DeviceId,
+		cdp.NetIP,
 		cdp.PortId,
 		cdp.NativeVlan,
 		cdp.VoiceVlan,

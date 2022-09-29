@@ -60,6 +60,7 @@ cdpm start -l -d 30
 While there's a lot more to a typical CDP or LLDP packet, the given purpose of this tool only needs the following:
 
 - The device name
+- Device IP
 - Port
 - Native VLAN
 - Voice VLAN
@@ -69,6 +70,9 @@ For trunked ports, the switch may send an LLDP packet, which isn't *quite* as us
 - Port description
 - System name
 - System description
+
+### Managed vs Unmanaged
+If you run CDPM on an unmanaged switch, you will be able to obtain the host name, but not an IP address. It is expected for the `Device IP` field to be empty when listening to a network interface connected to an unmanaged switch.
 
 Data expansion isn't planned, but I do plan on refactoring parts of this tool as separate packages; to be more modular. 
 
